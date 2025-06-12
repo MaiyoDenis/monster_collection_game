@@ -35,51 +35,88 @@ class CLIInterface:
             default="new",
         )
         if choice == "new":
+            self._create_new_player()
+        else:
+            self._login_existing_player()
 
-    def handle_explore(self, player: str):
-        """Explore the world and encounter wild monsters."""
-        console.print(f"[bold green]Exploring the world as {player}...[/bold green]")
-        # Logic for exploring and encountering monsters
-        # For now, just a placeholder
-        console.print("You encountered a wild monster!")
 
-    def handle_collection(self, player: str):
-        """View your monster collection."""
-        console.print(f"[bold blue]{player}'s Monster Collection:[/bold blue]")
-        # Logic to display player's monsters
-        monsters = self.game_engine.get_player_monsters(player)
-        if not monsters:
-            console.print("You have no monsters in your collection.")
+            #now lets tell the user how to play the game##
+        console.print("\n 📖 use 'python monster_game.py --help' to see available commands.", style="blue")
+    
+    def _create_new_player(self):
+        """Create a new player."""
+        username_name = Prompt.ask("Enter your player name")
+        existing_player=self.game.db.query(Player).filter(Player.username == username_name).first()
+        if existing_player:
+            console.print("❌ username already exists! Try logging in instead.", style="red")
             return
-        table = Table(title="Monsters")
-        table.add_column("ID", style="cyan")
-        table.add_column("Name", style="magenta")
-        table.add_column("Level", style="green")
-        for monster in monsters:
-            table.add_row(str(monster.id), monster.species.name, str(monster.level))
-        console.print(table)
+        player = self.game_engine.create_player(username_name)
+        console.print(f"🎉 Player '{player.username}' created successfully!", style="green")
+        console.print("💖You've been given a starter monster!", style="yellow")
 
-    def handle_battle(self, player: str):
-        """Engage in battles with wild monsters."""
-        console.print(f"[bold red]{player} is ready for battle![/bold red]")
-        # Logic for battling wild monsters
-        # Placeholder logic
-        console.print("You won the battle!")
+        ##now let show the player their monster##
+        starter= self.game.db.query(PlayerMonster).filter(PlayerMonster.player_id == player.id).first()
+        if starter:
+            console.print(f"🐾 Your starter monster is: {starter.species.name} (Level {starter.level})", style="blue")
+        else:
+            console.print("❗ No starter monster found. Please try again.", style="red")
 
-    def handle_heal(self, player: str):
-        """Heal your monsters at the Pokémon Center."""
-        console.print(f"Healing {player}'s monsters...")
-        cost = HEAL_COST * len(self.game_engine.get_player_monsters(player))
-        if Confirm.ask(f"This will cost {cost} coins. Do you want to proceed?"):
-            console.print(f"{player}'s monsters have been healed!")
-            # Logic to heal monsters
 
-    def handle_archivements(self, player: str):
-        """View your achievements."""
-        console.print(f"[bold yellow]{player}'s Achievements:[/bold yellow]")
-        # Logic to display player's achievements
-        achievements = self.game_engine.get_player_achievements(player)
-        if not achievements:
-            console.print("You have no achievements yet.")
+    def _login_player(self):
+        """Log in an existing player."""
+        username_name = Prompt.ask("Enter your trainer name")
+        player = self.game.login_player(username_name)
+        if not player:
+            console.print("❌ Player not found! Please create a new account.", style="red")
             return
-        table
+        console.print(f"🎮 Welcome back , Trainer {username_name}!", style="green")
+        
+    def handle_explore(self, player_name: str):
+        """Explore the game world."""
+        player_obj = self.game_engine.login_player(player_name)
+        if not player_obj:
+            console.print("❌ Trainer not found! Please create a new account.", style="red")
+            return
+        console.print(f"\n🌲 {player_name} ventures into the wild...", style="green")
+        console.print("🔍searching for wild monsters...", style="yellow")
+
+        ##find the random wild monster##
+        wild_species = self.game_engine.encounter_wild_monster()
+        console.print(f"\n💫 A wild {wild_species.name} ({wild_species.type}-type, {wild_species.rarity}) appears!", style="bold cyan")
+        console.print(f"📖{wild_species.description}", style="dim")
+         
+         ##ask what the player wants to do##
+        action = Prompt.ask(
+            "\nWhat do you want to do?",
+            choices=["catch", "fight", "run"],
+            default="catch"
+        )
+        if action == "catch":
+            self._catch_monster(player_obj, wild_species)
+        elif action == "fight":
+            self._fight_monster(player_obj, wild_species)
+        else:
+            console.print("🏃‍♂️ You ran away safely!", style="green")
+
+    def _attempt_catch(self, player_obj: Player, wild_species: MonsterSpecies) :
+        """Attempt to catch a wild monster."""
+        console.print(f"\n🎣 Attempting to catch {wild_species.name}...", style="yellow")
+
+        ##lets show the player coool catch animation##
+        for i in track(range(3), description="Throwing Monsterball..."):
+            import time
+            time.sleep(0.5)   ##lets wait for some time we make it realistic##
+        success = self.game_engine.attempt_catch(player_obj.id, wild_species.id)
+        if success:
+            console.print(f"🎉 You caught {wild_species.name}!", style="green")
+            console.print(f"💫 +50 Experience gained!", style="cyan")
+
+            #cheaking for archivements##
+            new_archivement = self.game_engine.check_archivement(player_obj.id,)
+            for achievement in new_archivement:
+                console.print(f"🏆 New achievement unlocked: {achievement.name}!", style="bold magenta")
+                console.print(f"💰 Received ${achievement.reward_money}!", style="yellow")
+
+        else:
+            console.print(f"❌ Failed to catch {wild_species.name}.", style="red")
+            console.print("💡Tip: Higher level trainers have a better catch rate!", style="dim")
