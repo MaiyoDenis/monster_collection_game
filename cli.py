@@ -219,7 +219,7 @@ class CLIInterface:
         table.add_column("HP", justify="center")
         table.add_column("Status")
 
-        for i, monster in enumerate(healthy_monsters,1):
+        for i, monster in enumerate(monsters,1):
             hp_percent=monster.hp/monster.max_hp 
             satus="Excellent" if hp_percent > 0.7 else "Good" if hp_percent > 0.4 else "Injured"
             status_style = "green" if hp_percent  > 0.7 else "yellow" if hp_percent > 0.4 else "red"
@@ -235,11 +235,14 @@ class CLIInterface:
 
         ##let them get their choice##
         try:
-            choice = Prompt.ask("Enter the number of your choice",) -1
-            if  choice < 0 or choice >= len(healthy_monsters):
+            choice = int(Prompt.ask("Enter the number of your choice")) - 1
+            if  choice < 0 or choice >= len(monsters):
                 console.print("❌ Invalid choice! Please try again.", style="red")
                 return None
-            return healthy_monsters[choice]
+            return monsters[choice]
+        except ValueError:
+            console.print("❌ Invalid input! Please enter a valid number.", style="red")
+            return None
     def _display_battle_result(self, battle_result: dict):
         ##show what hapened in the battle like riplay of the battle##
         console.print("\n"  + "=" * 60, style="bold")
@@ -461,4 +464,148 @@ class CLIInterface:
             return
         
         console.print(f"\n🔄Proposing trade: {player1.username} ↔️ {player2.username}", style="bold cyan")
+         
+         #show both collections##
+        self._display_trade_collections(your_monsters, their_monsters, player1.username, player2.username)
+        ##handle actual trade##
+        self._handle_trade(player1, player2, your_monsters, their_monsters)
+    def _display_trade_collections(self, your_monsters: list, their_monsters: list, player1_name: str, player2_name: str):
+        """Display both players' monster collections for trading."""
+        console.print(f"\n📦 {player1_name}'s Monsters:", style="bold green")
+        table = Table(show_header=True, header_style="bold green")
+        table.add_column("ID", style="dim")
+        table.add_column("Name", style="bold")
+        table.add_column("Type", style="cyan")
+        table.add_column("Level", justify="center")
+        table.add_column("Rarity", style="yellow")
+
+        for monster in your_monsters:
+            table.add_row(
+                str(monster.id),
+                monster.name,
+                monster.type,
+                str(monster.level),
+                monster.rarity
+            )
+        console.print(table)
+
+        console.print(f"\n📦 {player2_name}'s Monsters:", style="bold green")
+
+        table2 = Table(show_header=True, header_style="bold green")
+        table2.add_column("ID", style="dim")
+        table2.add_column("Name", style="bold")
+        table2.add_column("Type", justify="center")
+        table2.add_column("Level", justify="right")
+        table2.add_column("Rarity", justify="center")
+
+        for monster in their_monsters:
+            table2.add_row(
+                str(monster.id),
+                monster.name,
+                monster.type,
+                str(monster.level),
+                monster.rarity
+            )
+        console.print(table2)
+
+    def _handle_trade_selection(self, player1: Player, player2: Player, your_monsters: list, their_monsters: list):
+        """Let the player select a monster to trade."""
+        console.print(f"\n💡 In this demo,we will simulate an instant trade!", style="dim yellow")
+         
+        try:
+            offered_id=int(Prompt.ask("Enter ID of monster you want to offer "))
+            requested_id=int(Prompt.ask("Enter ID of monster you want to request"))
+
+            #check if the monster exists and belong to the right players##
+            offered_Monster=self.game.db.querry(PlayerMonster).filter(
+                PlayerMonster.id==offered_id,
+                PlayerMonster.player_id==player1.id
+            ).filter()
+
+            requested_Monster = self.game.db.query(PlayerMonster).filter(
+                PlayerMonster.id==requested_id,
+                PlayerMonster.player_id==player2.id
+                ).first()
+            
+            if offered_Monster:
+                console.print("❌ Invalid Monster ID from your collection!", style="red")
+                return
+            if not requested_Monster:
+                console.print("❌ Invalid Monster ID from their collection!", style="red")
+                return
+              
+
+
+              #Simulate the other player response
+            
+            self._simulate_trade_response(player1,player2,offered_Monster,requested_Monster)
+        except ValueError:
+            console.print("❌ Invalid ID. Please enter a valid MOnster  IDs.", style="red")
+
+    def _simulate_trade_response(self, player1: Player, player2: Player, offered_Monster: PlayerMonster, requested_monster: PlayerMonster):
+        """Simulate the other player response.""" 
+        console.print(f"\n🎲 Simulating {player2.username}'s response...", style="dim yellow")
         
+        if random.random()<0.7:
+            offered_Monster.player_id=player2.id
+            requested_monster.player_id=player1.id
+
+            #SAVE TRDE  IN DATA BASE##
+            from models import Trade
+            from datetime import datetime
+
+            trade_record = Trade(from_player_id=player1.id,
+                                to_player_id=player2.id,
+                                offered_Monster_id=offered_Monster.id,
+                                requested_monster_id=requested_monster.id,
+                                status="completed",
+                                completed_at=datetime.utcnow()
+                                )
+            self.game.db.add(trade_record)
+            self.game.db.commit()
+
+            console.print("🎉 Trade successful!", style="bold green")
+            console.print(f"📤 You gave: {offered_Monster.species.name} (Level {offered_Monster.level})", style="cyan")
+            console.print(f"📥 You received: {requested_monster.species.name} (Level {requested_monster.level})", style="cyan")
+        else:
+            console.print(f"💔 {player2.username} declined the trade offer.", style="red")
+
+    def handle_leaderboard(self):
+        #show the to[ players##
+        top_players=self.game.db.query(Player).order_by(Player.level.desc(), Player.experience.desc()).limit(10).all()
+        if not top_players:
+            console.print("📭 No trainers found!", style="yellow")
+            return
+        
+        console.print("\n🏆 Top Trainers Leaderboard", style="bold yellow")
+        console.print("═" * 60, style="yellow")
+        
+        # Make a leaderboard table
+        table = Table(show_header=True, header_style="bold yellow")
+        table.add_column("Rank", justify="center", style="bold")
+        table.add_column("Trainer", style="bold cyan")
+        table.add_column("Level", justify="center")
+        table.add_column("Experience", justify="center")
+        table.add_column("Monsters", justify="center")
+        table.add_column("Battles Won", justify="center")
+        
+        from models import Battle
+        
+        for i, player in enumerate(top_players, 1):
+            monster_count = len(player.monsters)
+            battle_wins = self.game.db.query(Battle).filter(Battle.winner_id == player.id).count()
+            
+            # Make top 3 players special colors
+            rank_style = "gold" if i == 1 else "silver" if i == 2 else "orange" if i == 3 else "white"
+            rank_symbol = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else str(i)
+            
+            table.add_row(
+                f"[{rank_style}]{rank_symbol}[/{rank_style}]",
+                player.username,
+                str(player.level),
+                str(player.experience),
+                str(monster_count),
+                str(battle_wins)
+            )
+        
+        console.print(table)
