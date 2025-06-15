@@ -2,10 +2,6 @@
 
 <div align="center">
 
-[Python](https://img.shields.io/badge/Python-3.7+-blue.svg)(https://python.org)
-[SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-green.svg)(https://sqlalchemy.org)
-[Rich](https://img.shields.io/badge/Rich-CLI-yellow.svg)(https://rich.readthedocs.io)
-[License](https://img.shields.io/badge/License-Educational-purple.svg)(https://github.com)
 
 **A comprehensive text-based monster collection game built through collaborative pair programming**
 
@@ -24,12 +20,10 @@
 <td align="center" width="50%">
 
 ### 🔧 **Partner A: Core Game Engine & Monster System**
-**Nasra Mauli (Naasiro)**  
+**Nasra Maulid (Naasiro)**  
 *"The Foundation Architect"*
 
-[[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-black?logo=github)](https://github.com/Nasra-Maulid)
-
-**Repositories**: 114+ | **Focus**: Web Development & System Architecture
+[GitHub](https://github.com/Nasra-Maulid)
 
 **Responsibilities:**
 - 🗄️ Database architecture and ORM relationships
@@ -44,9 +38,7 @@
 **Denis Maiyo**  
 *"The Experience Creator"*
 
-[GitHub](https://img.shields.io/badge/GitHub-MaiyoDenis-black?logo=github)(https://github.com/MaiyoDenis)
-
-**Repositories**: 61+ | **Focus**: AI & Full-Stack Development
+[GitHub](https://github.com/MaiyoDenis)
 
 **Responsibilities:**
 - 🥊 Battle system and combat mechanics
@@ -258,49 +250,6 @@ achievements         # Available achievements (Collaborative)
 player_achievements  # Player achievement progress (Collaborative)
 ```
 
-### **Database Diagram**
-Copy this into [dbdiagram.io](https://dbdiagram.io) to visualize:
-
-```sql
-Table players {
-  id integer [pk, increment]
-  username varchar [unique, not null]
-  level integer [default: 1]
-  experience integer [default: 0]
-  money integer [default: 500]
-  created_at timestamp [default: 'now()']
-}
-
-Table monster_species {
-  id integer [pk, increment]
-  name varchar [unique, not null]
-  type varchar [not null]
-  base_hp integer [not null]
-  base_attack integer [not null]
-  base_defense integer [not null]
-  base_speed integer [not null]
-  rarity varchar [not null]
-  description text
-  catch_rate float
-}
-
-Table player_monsters {
-  id integer [pk, increment]
-  player_id integer [ref: > players.id, not null]
-  species_id integer [ref: > monster_species.id, not null]
-  nickname varchar
-  level integer [default: 1]
-  experience integer [default: 0]
-  hp integer [not null]
-  max_hp integer [not null]
-  attack integer [not null]
-  defense integer [not null]
-  speed integer [not null]
-  caught_at timestamp [default: 'now()']
-}
-
-// Additional tables for battles, trades, achievements...
-```
 
 ---
 
@@ -524,10 +473,10 @@ def _display_battle_results(self, battle_result: dict):
 
 <div align="center">
 
-### **🔧 Partner A: Nasra Mauli**
+### **🔧 Partner A: Nasra Maulid**
 **Core Game Engine & Monster System**
 
-[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-181717?logo=github)(https://github.com/Nasra-Maulid)
+[GitHub](https://github.com/Nasra-Maulid)
 
 *Specialization: Database Architecture, Game Balance, System Design*
 
@@ -536,7 +485,7 @@ def _display_battle_results(self, battle_result: dict):
 ### **⚔️ Partner B: Denis Maiyo**  
 **Battle System & Player Management**
 
-[GitHub](https://img.shields.io/badge/GitHub-MaiyoDenis-181717?logo=github)(https://github.com/MaiyoDenis)
+[GitHub](https://github.com/MaiyoDenis)
 
 *Specialization: AI Development, Full-Stack Engineering, User Experience*
 
@@ -565,9 +514,9 @@ python3 monster_game.py start
 
 *Built with ❤️ through exceptional pair programming collaboration*
 
-[Python](https://img.shields.io/badge/Made%20with-Python-blue.svg?logo=python)(https://python.org)
-[SQLAlchemy](https://img.shields.io/badge/Powered%20by-SQLAlchemy-green.svg?logo=sqlalchemy)(https://sqlalchemy.org)
-[Rich](https://img.shields.io/badge/Enhanced%20with-Rich-yellow.svg?logo=rich)(https://rich.readthedocs.io)
+[Python](https://python.org)
+[SQLAlchemy](https://sqlalchemy.org)
+[Rich](https://rich.readthedocs.io)
 
 **Happy Monster Collecting!** 🎮✨
 
