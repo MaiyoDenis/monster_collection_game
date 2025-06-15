@@ -27,7 +27,7 @@
 **Nasra Mauli (Naasiro)**  
 *"The Foundation Architect"*
 
-[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-black?logo=github)(https://github.com/Nasra-Maulid)
+[[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-black?logo=github)](https://github.com/Nasra-Maulid)
 
 **Repositories**: 114+ | **Focus**: Web Development & System Architecture
 
