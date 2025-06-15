@@ -420,22 +420,6 @@ python3 monster_game.py leaderboard
 
 ---
 
-## 🎯 **Rubric Compliance & Excellence**
-
-| Criteria | Score | Highlights |
-|----------|-------|------------|
-| **Database Design & SQLAlchemy** | **10/10** | 7 tables, perfect relationships, efficient ORM |
-| **Core Game Functionality** | **8/8** | All features working with error handling |
-| **Battle System** | **8/8** | Complete turn-based combat + PvP innovation |
-| **CLI Interface & UX** | **6/6** | Rich interface with colors and animations |
-| **Code Quality & Documentation** | **6/6** | Clean modular structure, comprehensive docs |
-| **Collaboration & Git Usage** | **6/6** | Clear roles, balanced contributions |
-| **Bonus Features & Innovation** | **6/6** | PvP battles, Rich CLI, advanced features |
-
-**🎖️ Total Score: 50/50 (A+)**
-
----
-
 ## 🧪 **Testing Checklist**
 
 | Feature | Status | Partner | Test Command |
@@ -582,8 +566,8 @@ python3 monster_game.py start
 *Built with ❤️ through exceptional pair programming collaboration*
 
 [[Python](https://img.shields.io/badge/Made%20with-Python-blue.svg?logo=python)](https://python.org)
-[[SQLAlchemy](https://img.shields.io/badge/Powered%20by-SQLAlchemy-green.svg)](https://sqlalchemy.org)
-[[Rich](https://img.shields.io/badge/Enhanced%20with-Rich-yellow.svg)](https://rich.readthedocs.io)
+[[SQLAlchemy](https://img.shields.io/badge/Powered%20by-SQLAlchemy-green.svg?logo=sqlalchemy)](https://sqlalchemy.org)
+[[Rich](https://img.shields.io/badge/Enhanced%20with-Rich-yellow.svg?logo=rich)](https://rich.readthedocs.io)
 
 **Happy Monster Collecting!** 🎮✨
 
