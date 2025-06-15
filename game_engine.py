@@ -3,23 +3,23 @@ import json
 from datetime import datetime
 from typing import List, Dict, Optional,Tuple
 from sqlalchemy.orm import Session
-from models import player, MonsterSpecies,PlayerMonster, Battle, Trade, Archivement,PlayerAchivement
-from config import TYPE_EFFECTIVENESS, RARITY_WEIGHTS,BASE_CATCH_RATE_BONUS,BATTLE_EXP_MULTIPLIER,BUTTLE_MONEY_MULTIPLIER
+from models import Player, MonsterSpecies, PlayerMonster, Battle, Trade, Achievement, PlayerAchievement
+from config import TYPE_EFFECTIVENESS, RARITY_WEIGHTS, BASE_CATCH_RATE_BONUS, BATTLE_EXP_MULTIPLIER, BATTLE_MONEY_MULTIPLIER
 
 from database import SessionLocal
 class GameEngine:
     def __init__(self):
         self.db: Session = SessionLocal()
-        self.current_player: Optional[player] = None
+        self.current_player: Optional[Player] = None
 
      ##player management##
     def __delattr__(self):
         if hasattr(self, 'db'):
             self.db.close() 
-    def create_player(self, username: str) -> player:
+    def create_player(self, username: str) -> Player:
      #create a new player account
 
-        player=player(username=username)
+        player=Player(username=username)
         self.db.add(player)
         self.db.commit()
         self.db.refresh(player)
@@ -27,7 +27,7 @@ class GameEngine:
         self.give_starter_monster(player.id)
         return player
     def login_player(self, username: str) -> Optional[PlayerMonster]:
-        player = self.db.query(player).filter(player.username == username).first()
+        player = self.db.query(Player).filter(Player.username == username).first()
         if player:
             self.current_player = player
             return player
@@ -45,7 +45,7 @@ class GameEngine:
         if not species:
             raise None
         level_multiplier = 1 + (level - 1) * 0.1
-        mx_hp = int(species.base_hp * level_multiplier)
+        max_hp = int(species.base_hp * level_multiplier)
         attack= int(species.base_attack * level_multiplier)
         defense = int(species.base_defense * level_multiplier)
         speed = int(species.base_speed * level_multiplier)
@@ -53,11 +53,12 @@ class GameEngine:
             player_id=player_id,
             species_id=species_id,
             level=level,
-            max_hp=mx_hp,
+            max_hp=max_hp,
             attack=attack,
             defense=defense,
             speed=speed,
-            expirence=0,
+            experience=0,
+            hp=max_hp,  # Initialize current HP to max HP
         )
         self.db.add(monster)
         self.db.commit()
@@ -72,9 +73,15 @@ class GameEngine:
             weigheted_species.extend([species] * weight)
         return random.choice(weigheted_species)
     
-    def attempt_catch(self, player_id: int, species: MonsterSpecies) -> bool:
+    def attempt_catch(self, player_id: int, species) -> bool:
         """Attempt to catch a wild monster"""
         player = self.db.query(Player).filter(Player.id == player_id).first()
+        
+        # If species is an int (species id), fetch the MonsterSpecies object
+        if isinstance(species, int):
+            species = self.db.query(MonsterSpecies).filter(MonsterSpecies.id == species).first()
+            if not species:
+                return False
         
         # Calculate catch rate based on species rarity and player level
         base_rate = species.catch_rate
@@ -249,8 +256,67 @@ class GameEngine:
             monster.defense += random.randint(1, 3)
             monster.speed += random.randint(1, 3)
             
+            # Check for evolution after level up
+            self.check_monster_evolution(monster)
+            
             return True
         return False
+
+    def check_monster_evolution(self, monster: PlayerMonster):
+        """Check if the monster can evolve at its current level"""
+        # Define evolution levels and evolved species mapping
+        evolution_map = {
+            "Flamewyrm": {"level": 10, "evolves_to": "Flarelord"},
+            "Aquafin": {"level": 10, "evolves_to": "Aquarion"},
+            "Vinewhip": {"level": 10, "evolves_to": "Vinetitan"},
+            # Add more species evolutions as needed
+        }
+        species_name = monster.species.name
+        if species_name in evolution_map:
+            evo_info = evolution_map[species_name]
+            if monster.level >= evo_info["level"]:
+                # Evolve monster
+                new_species = self.db.query(MonsterSpecies).filter(MonsterSpecies.name == evo_info["evolves_to"]).first()
+                if new_species:
+                    monster.species_id = new_species.id
+                    monster.species = new_species
+                    # Update stats to new species base stats scaled by level
+                    level_multiplier = 1 + (monster.level - 1) * 0.1
+                    monster.max_hp = int(new_species.base_hp * level_multiplier)
+                    monster.hp = monster.max_hp
+                    monster.attack = int(new_species.base_attack * level_multiplier)
+                    monster.defense = int(new_species.base_defense * level_multiplier)
+                    monster.speed = int(new_species.base_speed * level_multiplier)
+                    self.db.commit()
+                    print(f"{species_name} evolved into {new_species.name}!")
+    
+    def export_collection_to_json(self, player_id: int, filepath: str) -> bool:
+        """Export player's monster collection to a JSON file"""
+        import json
+        player = self.db.query(Player).filter(Player.id == player_id).first()
+        if not player:
+            return False
+        collection = []
+        for monster in player.monsters:
+            collection.append({
+                "id": monster.id,
+                "species": monster.species.name,
+                "nickname": monster.nickname,
+                "level": monster.level,
+                "hp": monster.hp,
+                "max_hp": monster.max_hp,
+                "attack": monster.attack,
+                "defense": monster.defense,
+                "speed": monster.speed,
+                "caught_at": monster.caught_at.isoformat()
+            })
+        try:
+            with open(filepath, "w") as f:
+                json.dump(collection, f, indent=4)
+            return True
+        except Exception as e:
+            print(f"Error exporting collection: {e}")
+            return False
     
     def award_experience(self, player_id: int, amount: int):
         """Award experience to player"""

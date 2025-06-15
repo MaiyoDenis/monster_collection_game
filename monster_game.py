@@ -3,11 +3,11 @@ import os
 import sys
 import click
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from cli import CLIinterface
+from cli import CLIInterface
 from database import init_database
 
-# Create an instance of CLIinterface
-cli_interface = CLIinterface()
+# Create an instance of CLIInterface
+cli_interface = CLIInterface()
 
 ##cli helper##
 @click.group()
@@ -40,11 +40,12 @@ def heal(player):
     cli_interface.handle_heal(player)
 @cli.command()
 @click.option('--player', prompt='Trainer name', help='your trainer name.')
-def archivements(player):
+def achievements(player):
     """View your achievements."""
-    cli_interface.handle_archivements(player)
+    cli_interface.handle_achievements(player)
 @cli.command()
-@click.option('--player', prompt='Trainer name', help='your trainer name.')
+@click.option('--from_player', prompt='From trainer name', help='Name of the player offering the trade.')
+@click.option('--to_player', prompt='To trainer name', help='Name of the player receiving the trade.')
 def trade(from_player, to_player):
     """Trade monsters with other players."""
     cli_interface.handle_trade(from_player, to_player)
@@ -70,6 +71,6 @@ if __name__ == '__main__':
         import sqlalchemy
     except ImportError:
         print("⏳ Installing required packages...")
-        os.system('pip install -r requarements.text')
+        os.system('pip install -r requirements.txt')
         print("✅ Packages installed successfully.")
     cli()

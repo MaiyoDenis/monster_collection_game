@@ -37,7 +37,7 @@ class CLIInterface:
         if choice == "new":
             self._create_new_player()
         else:
-            self._login_existing_player()
+            self._login_player()
 
 
             #now lets tell the user how to play the game##
@@ -46,7 +46,7 @@ class CLIInterface:
     def _create_new_player(self):
         """Create a new player."""
         username_name = Prompt.ask("Enter your player name")
-        existing_player=self.game.db.query(Player).filter(Player.username == username_name).first()
+        existing_player=self.game_engine.db.query(Player).filter(Player.username == username_name).first()
         if existing_player:
             console.print("❌ username already exists! Try logging in instead.", style="red")
             return
@@ -55,7 +55,7 @@ class CLIInterface:
         console.print("💖You've been given a starter monster!", style="yellow")
 
         ##now let show the player their monster##
-        starter= self.game.db.query(PlayerMonster).filter(PlayerMonster.player_id == player.id).first()
+        starter= self.game_engine.db.query(PlayerMonster).filter(PlayerMonster.player_id == player.id).first()
         if starter:
             console.print(f"🐾 Your starter monster is: {starter.species.name} (Level {starter.level})", style="blue")
         else:
@@ -65,11 +65,12 @@ class CLIInterface:
     def _login_player(self):
         """Log in an existing player."""
         username_name = Prompt.ask("Enter your trainer name")
-        player = self.game.login_player(username_name)
+        player = self.game_engine.login_player(username_name)
         if not player:
             console.print("❌ Player not found! Please create a new account.", style="red")
             return
-        console.print(f"🎮 Welcome back , Trainer {username_name}!", style="green")
+        console.print(f"🎮 Welcome back, Trainer {username_name}!", style="green")
+        self.current_player = player
         
     def handle_explore(self, player_name: str):
         """Explore the game world."""
@@ -92,9 +93,16 @@ class CLIInterface:
             default="catch"
         )
         if action == "catch":
-            self._catch_monster(player_obj, wild_species)
+            self._attempt_catch(player_obj, wild_species)
         elif action == "fight":
-            self._fight_monster(player_obj, wild_species)
+            # The _fight_monster method does not exist, so simulate battle with first monster
+            monsters = self.game_engine.db.query(PlayerMonster).filter(PlayerMonster.player_id == player_obj.id).all()
+            if not monsters:
+                console.print("❌ You have no monsters to fight with!", style="red")
+                return
+            chosen_monster = monsters[0]
+            battle_result = self.game_engine.battle_wild_monster(chosen_monster)
+            self._display_battle_result(battle_result)
         else:
             console.print("🏃‍♂️ You ran away safely!", style="green")
 
@@ -111,11 +119,11 @@ class CLIInterface:
             console.print(f"🎉 You caught {wild_species.name}!", style="green")
             console.print(f"💫 +50 Experience gained!", style="cyan")
 
-            #cheaking for archivements##
-            new_archivement = self.game_engine.check_archivement(player_obj.id,)
-            for achievement in new_archivement:
-                console.print(f"🏆 New achievement unlocked: {achievement.name}!", style="bold magenta")
-                console.print(f"💰 Received ${achievement.reward_money}!", style="yellow")
+            #checking for achievements##
+        new_achievements = self.game_engine.check_achievements(player_obj.id)
+        for achievement in new_achievements:
+            console.print(f"🏆 New achievement unlocked: {achievement.name}!", style="bold magenta")
+            console.print(f"💰 Received ${achievement.reward_money}!", style="yellow")
 
         else:
             console.print(f"❌ Failed to catch {wild_species.name}.", style="red")
@@ -129,10 +137,10 @@ class CLIInterface:
         if not player_obj:
             console.print("❌ Trainer not found! Please create a new account.", style="red")
             return
-        ##cheaking all the monsters##
-        monsters= self.game.db.query(PlayerMonster).filter(PlayerMonster.player_id==player_obj.id).all()
+        ##checking all the monsters##
+        monsters= self.game_engine.db.query(PlayerMonster).filter(PlayerMonster.player_id==player_obj.id).all()
         if not monsters:
-            console.print("📭Your collection is empty!Go explore to ctch some Monster!.", style="yellow")
+            console.print("📭Your collection is empty! Go explore to catch some monsters!.", style="yellow")
             return
 
         self._display_collection(player_obj, monsters)
@@ -164,12 +172,12 @@ class CLIInterface:
               str(monster.level),
               hp_display,
               str(monster.attack),
-              str(monster.defence),
+              str(monster.defense),
               str(monster.speed),
               monster.species.rarity
           )
         console.print(table)
-        console.print("\n📊 Total monsters:{len(monsters)}", style="blue")
+        console.print(f"\n📊 Total monsters: {len(monsters)}", style="blue")
     def handle_battle(self, player_name: str):
         """Start a battle with a wild monster."""
         player_obj = self.game_engine.login_player(player_name)
@@ -178,11 +186,13 @@ class CLIInterface:
             return
         
         ##get the player's monsters##
-        monsters= self.game.db.query(PlayerMonster).filter(PlayerMonster.player_id == player_obj.id).all()
-        healthy_monsters = [m for m in monsters if m.hp > m.mx_hp*0.1]
+        monsters= self.game_engine.db.query(PlayerMonster).filter(PlayerMonster.player_id == player_obj.id).all()
+        for m in monsters:
+            console.print(f"Monster {m.species.name} HP: {m.hp}/{m.max_hp}")
+        healthy_monsters = [m for m in monsters if m.hp > m.max_hp*0.1]
         if not healthy_monsters:
             console.print("💔 You have no healthy monsters to battle with!", style="red")
-            console.print(f"🏥 use 'heal' command to restore your monster!", style="yellow")
+            console.print(f"🏥 use 'heal' command to restore your monsters!", style="yellow")
 
             return  
         
@@ -191,14 +201,14 @@ class CLIInterface:
         if not chosen_monster:
            
             return  
-        console.print("\n🥊🥊 {chosen_monster.species.name} enters the battle arena!", style="green")
+        console.print("\n🥊🥊 ${chosen_monster.species.name} enters the battle arena!", style="green")
 
         ##now lets find a wild monster to battle with##start the battle##
-        battle_result=self.game.battle_wild_monster(chosen_monster)
+        battle_result=self.game_engine.battle_wild_monster(chosen_monster)
         #lets show now what happens in thebattle##
         self._display_battle_result(battle_result,)
         ##check for new archivements##
-        new_archivement = self.game_engine.check_archivement(player_obj.id)
+        new_archivement = self.game_engine.check_achievements(player_obj.id)
         for achievement in new_archivement:
             console.print(f"🏆 New achievement unlocked: {achievement.name}!", style="bold magenta")
             console.print(f"💰 Received ${achievement.reward_money}!", style="yellow")
@@ -246,10 +256,10 @@ class CLIInterface:
     def _display_battle_result(self, battle_result: dict):
         ##show what hapened in the battle like riplay of the battle##
         console.print("\n"  + "=" * 60, style="bold")
-        console.print("⚔️ BATTLE LOG ⚔️", style="bold red", justify="center")
+        console.print("⚔️ BATTLE LOG ⚔️", style="bold red", justify="left")
         console.print("=" * 60, style="bold")
         #show each line of the buttle##
-        for log_entry in battle_result['battle log']:
+        for log_entry in battle_result.get('battle_log', []):
             if "victory" in log_entry:
                 console.print(f"🏆 {log_entry}", style="bold green")
             elif "defeat" in log_entry:
@@ -270,10 +280,10 @@ class CLIInterface:
         """Offer the player a chance to catch the wild monster after battle."""
         console.print("\n💫 The wild monster is weakened and ready to be caught!", style="bold yellow")
         if Confirm.ask("Do you want to attempt to catch it?"):
-            wild_species = self.game.db.query(MonsterSpecies).filter(MonsterSpecies.id == battle_result['wild_monster_id']).first()
+            wild_species = self.game_engine.db.query(MonsterSpecies).filter(MonsterSpecies.id == battle_result['wild_monster_id']).first()
             if not wild_species:
                 console.print("🎯 Throwing Monsterball!", style="red")
-                success=self.game.attempt_catch(battle_result['player_id'], wild_species)
+                success=self.game_engine.attempt_catch(battle_result['player_id'], wild_species)
                 if success:
                     console.print(f"🎉 You caught {wild_species.name}!", style="green")
 
@@ -284,8 +294,8 @@ class CLIInterface:
 
     def handle_pvp_battle(self, player_name:str,player2_name:str):
         """Start a player vs player battle."""
-        player1 = self.game_engine.login_player(player_name).first()
-        player2 = self.game_engine.login_player(player2_name).first()
+        player1 = self.game_engine.login_player(player_name)
+        player2 = self.game_engine.login_player(player2_name)
 
         if not player1 or not player2:
             console.print("❌ One or both trainers not found! Please check the names.", style="red")
@@ -306,18 +316,27 @@ class CLIInterface:
 
                  ##player 1 choose their monster##
         console.print(f"\n{player1.username}, choose your monster:", style="bold green")
-        p1_choice= self._select_battle_monster(player1.username, p1_monsters)
+        p1_choice= self._select_battle_monster(player1, p1_monsters)
         if not p1_choice:
             
             return 
         #player 2 choose their monster##
-        console.print(f"\n{player2_name}, choose your monster:", style="bold green")
-        p2_choice = self._select_battle_monster(player2_name, p2_monsters)
+        console.print(f"\n{player2.username}, choose your monster:", style="bold green")
+        p2_choice = self._select_battle_monster(player2, p2_monsters)
         if not p2_choice:
             return
         
         ###buttle coce now##
-        battle_result = self.game_engine.pvp_battle(p1_choice, p2_choice)
+        # The GameEngine class does not have a pvp_battle method, so we need to implement or fix this call
+        # For now, let's just simulate a simple battle result dictionary to avoid error
+        battle_result = {
+            'battle_log': [
+                f"{p1_choice.species.name} attacks {p2_choice.species.name}!",
+                f"{p2_choice.species.name} attacks {p1_choice.species.name}!",
+                "Battle ended in a draw (simulation)."
+            ],
+            'can_catch': False
+        }
         self._display_battle_result(battle_result)
         
     def handle_heal(self, player: str):   
@@ -338,9 +357,9 @@ class CLIInterface:
 
             ##take their money and heal monsters"##
         player_obj.money -= HEAL_COST
-        self.game.db.commit()
+        self.game_engine.db.commit()
 
-        self.game.heal_monsters(player_obj.id)
+        self.game_engine.heal_all_monsters(player_obj.id)
         console.print(f"🏥 All your monsters have been healed to full HP!", style="green")
         console.print(f"💰 Paid ${HEAL_COST}. Remaining money: ${player_obj.money}",style="yellow")
 
@@ -351,10 +370,10 @@ class CLIInterface:
         if not player_obj:
             console.print("❌ Trainer not found! Please create a new account.", style="red")
             return
- #lest get all starts##
+        # let's get all stats##
         stats=self.game_engine.get_player_stats(player_obj.id)
 
-        ##prifile card now##
+        ##profile card now##
         self._display_profile(stats)
 
         self._display_achievements(player_obj.id)
@@ -385,13 +404,13 @@ class CLIInterface:
         from models import Achievement
 
         ##give 3 most archivements##
-        recent_achievements = self.game.db.query(Achievement).filter(Achievement.player_id == player_obj.id).order_by(Achievement.created_at.desc()).limit(3).all()
+        recent_achievements = self.game_engine.db.query(Achievement).filter(Achievement.player_id == player_obj.id).order_by(Achievement.created_at.desc()).limit(3).all()
         if not recent_achievements:
             console.print("\n🏆Recent Achievements!", style="Bold yellow")
             for achievement in recent_achievements:
                 console.print(f"  . {achievement.name} - {achievement.description}", style="Yellow")
 
-    def handle_archivements(self, player: str):
+    def handle_achievements(self, player: str):
         """Display the player's achievements."""
         player_obj = self.game_engine.login_player(player)
         if not player_obj:
@@ -399,22 +418,22 @@ class CLIInterface:
             return
         
         from models import Achievement
-        #gett all the archivement men#
-        all_achievements = self.game.db.query(Achievement).all()
-        #lets get the ones it already has##
-        unlocked_ids=[pa.archivement_id for pa in player_obj.achievements]
-        console.print(f"\n🏆Archivements progress for {player}:", style="bold yellow")
+        # get all the achievement men#
+        all_achievements = self.game_engine.db.query(Achievement).all()
+        # lets get the ones it already has##
+        unlocked_ids=[pa.achievement_id for pa in player_obj.achievements]
+        console.print(f"\n🏆Achievements progress for {player}:", style="bold yellow")
         console.print("=" * 60, style="yellow")
 
-        #lets make atable to show the achievements##
+        # lets make a table to show the achievements##
         table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Archievement.id", style="dim")
+        table.add_column("Achievement.id", style="dim")
         table.add_column("Description")
         table.add_column("Reward", justify="center")
         table.add_column("Status", justify="center")
 
         for achievement in all_achievements:
-            #lets see if the have it##
+            # lets see if they have it##
             status = "✅Unlocked" if achievement.id in unlocked_ids else "🔒Locked"
             status_style = "green" if achievement.id in unlocked_ids else "red"
             table.add_row(
@@ -434,12 +453,11 @@ class CLIInterface:
         #handle trading monsters between players
         """Trade monsters between players."""
         from models import Trade
-        #lets check if both players exist##
-        player1 = self.game.db.query(Player).filter(Player.username == from_player).first()
-        player2 = self.game.db.query(Player).filter(Player.username == to_player).first()
-        if not player1 or not player2:
+        # let's check if both players exist##
+        player1 = self.game_engine.db.query(Player).filter(Player.username == from_player).first()
+        player2 = self.game_engine.db.query(Player).filter(Player.username == to_player).first()
+        if not player1:
             console.print(f"❌ Trainer '{from_player}' not found!.", style="red")
-
             return
         if not player2:
             console.print(f"❌ Trainer '{to_player}' not found!.", style="red")
@@ -449,12 +467,12 @@ class CLIInterface:
             console.print("❌ You cannot trade with yourself! Please choose another trainer.", style="red")
             return
         
-        #do the trading process##
+        # do the trading process##
         self.execute_trade(player1, player2)
     def execute_trade(self, player1: Player, player2: Player):
         #get both players' monsters##
-        your_monsters = self.game.db.query(PlayerMonster).filter(PlayerMonster.player_id == player1.id).all()
-        their_monsters = self.game.db.query(PlayerMonster).filter(PlayerMonster.player_id == player2.id).all()
+        your_monsters = self.game_engine.db.query(PlayerMonster).filter(PlayerMonster.player_id == player1.id).all()
+        their_monsters = self.game_engine.db.query(PlayerMonster).filter(PlayerMonster.player_id == player2.id).all()
         if not your_monsters or not their_monsters:
             console.print("❌ One or both trainers have no monsters to trade!", style="red")
             return
@@ -468,7 +486,7 @@ class CLIInterface:
          #show both collections##
         self._display_trade_collections(your_monsters, their_monsters, player1.username, player2.username)
         ##handle actual trade##
-        self._handle_trade(player1, player2, your_monsters, their_monsters)
+        self._handle_trade_selection(player1, player2, your_monsters, their_monsters)
     def _display_trade_collections(self, your_monsters: list, their_monsters: list, player1_name: str, player2_name: str):
         """Display both players' monster collections for trading."""
         console.print(f"\n📦 {player1_name}'s Monsters:", style="bold green")
@@ -482,10 +500,10 @@ class CLIInterface:
         for monster in your_monsters:
             table.add_row(
                 str(monster.id),
-                monster.name,
-                monster.type,
+                monster.species.name,
+                monster.species.type,
                 str(monster.level),
-                monster.rarity
+                monster.species.rarity
             )
         console.print(table)
 
@@ -501,10 +519,10 @@ class CLIInterface:
         for monster in their_monsters:
             table2.add_row(
                 str(monster.id),
-                monster.name,
-                monster.type,
+                monster.species.name,
+                monster.species.type,
                 str(monster.level),
-                monster.rarity
+                monster.species.rarity
             )
         console.print(table2)
 
@@ -517,20 +535,20 @@ class CLIInterface:
             requested_id=int(Prompt.ask("Enter ID of monster you want to request"))
 
             #check if the monster exists and belong to the right players##
-            offered_Monster=self.game.db.querry(PlayerMonster).filter(
+            offered_Monster=self.game_engine.db.query(PlayerMonster).filter(
                 PlayerMonster.id==offered_id,
                 PlayerMonster.player_id==player1.id
-            ).filter()
+            ).first()
 
-            requested_Monster = self.game.db.query(PlayerMonster).filter(
+            requested_Monster = self.game_engine.db.query(PlayerMonster).filter(
                 PlayerMonster.id==requested_id,
                 PlayerMonster.player_id==player2.id
                 ).first()
             
-            if offered_Monster:
+            if offered_Monster is None:
                 console.print("❌ Invalid Monster ID from your collection!", style="red")
                 return
-            if not requested_Monster:
+            if requested_Monster is None:
                 console.print("❌ Invalid Monster ID from their collection!", style="red")
                 return
               
@@ -556,13 +574,13 @@ class CLIInterface:
 
             trade_record = Trade(from_player_id=player1.id,
                                 to_player_id=player2.id,
-                                offered_Monster_id=offered_Monster.id,
+                                offered_monster_id=offered_Monster.id,
                                 requested_monster_id=requested_monster.id,
                                 status="completed",
                                 completed_at=datetime.utcnow()
                                 )
-            self.game.db.add(trade_record)
-            self.game.db.commit()
+            self.game_engine.db.add(trade_record)
+            self.game_engine.db.commit()
 
             console.print("🎉 Trade successful!", style="bold green")
             console.print(f"📤 You gave: {offered_Monster.species.name} (Level {offered_Monster.level})", style="cyan")
@@ -572,7 +590,7 @@ class CLIInterface:
 
     def handle_leaderboard(self):
         #show the to[ players##
-        top_players=self.game.db.query(Player).order_by(Player.level.desc(), Player.experience.desc()).limit(10).all()
+        top_players=self.game_engine.db.query(Player).order_by(Player.level.desc(), Player.experience.desc()).limit(10).all()
         if not top_players:
             console.print("📭 No trainers found!", style="yellow")
             return
@@ -593,7 +611,7 @@ class CLIInterface:
         
         for i, player in enumerate(top_players, 1):
             monster_count = len(player.monsters)
-            battle_wins = self.game.db.query(Battle).filter(Battle.winner_id == player.id).count()
+            battle_wins = self.game_engine.db.query(Battle).filter(Battle.winner_id == player.id).count()
             
             # Make top 3 players special colors
             rank_style = "gold" if i == 1 else "silver" if i == 2 else "orange" if i == 3 else "white"
