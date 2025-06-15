@@ -16,7 +16,7 @@ BASE_CATCH_RATE_BONUS = 0.02          # Catch rate improves by 2% per player lev
 BATTLE_EXP_MULTIPLIER = 25            # Base experience from battles
 BATTLE_MONEY_MULTIPLIER = 10          # Base money from battles
 
-# Type effectiveness chart (Partner A designs this!)
+
 # This is like the Pokemon type chart - what beats what
 TYPE_EFFECTIVENESS = {
     "Fire": {
@@ -53,7 +53,6 @@ TYPE_EFFECTIVENESS = {
     },
 }
 
-# Rarity weights for wild encounters (Partner A designs this!)
 # Higher numbers = more common
 RARITY_WEIGHTS = {
     "Common": 50,      # Very common monsters
@@ -64,6 +63,6 @@ RARITY_WEIGHTS = {
 }
 
 # Monster level progression (Partner A designs this!)
-EXP_PER_LEVEL = 100              # How much exp needed per level
+EXP_PER_LEVEL = 100              
 PLAYER_EXP_PER_LEVEL = 200       # How much exp players need to level up
 STAT_GROWTH_PER_LEVEL = 0.1      # Stats grow by 10% per level
