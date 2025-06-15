@@ -39,10 +39,7 @@ class Player(Base):
         return f"<Player(username='{self.username}', level={self.level})>"
 
 class MonsterSpecies(Base):
-    """
-    This is like the Pokedex entry for each monster type.
-    It defines what a Pikachu or Charizard is like in general.
-    """
+
     __tablename__ = "monster_species"
     
     # Basic species info
@@ -98,8 +95,7 @@ class PlayerMonster(Base):
     def __repr__(self):
         return f"<PlayerMonster(species='{self.species.name}', level={self.level}, owner='{self.owner.username}')>"
 
-# The rest of the tables (Battle, Trade, Achievement, etc.) are shared between both partners
-# But Partner A focuses on the monster-related ones above
+
 
 class Battle(Base):
     """Battle history tracking"""
@@ -153,7 +149,7 @@ class Achievement(Base):
     requirement_value = Column(Integer)
     reward_money = Column(Integer, default=0)
     
-    # Relationships
+    
     player_achievements = relationship("PlayerAchievement", back_populates="achievement")
 
     def __repr__(self):
