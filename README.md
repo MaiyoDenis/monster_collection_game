@@ -2,10 +2,10 @@
 
 <div align="center">
 
-[[Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://python.org)
-[[SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-green.svg)](https://sqlalchemy.org)
-[[Rich](https://img.shields.io/badge/Rich-CLI-yellow.svg)](https://rich.readthedocs.io)
-[[License](https://img.shields.io/badge/License-Educational-purple.svg)](https://github.com)
+[Python](https://img.shields.io/badge/Python-3.7+-blue.svg)(https://python.org)
+[SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0+-green.svg)(https://sqlalchemy.org)
+[Rich](https://img.shields.io/badge/Rich-CLI-yellow.svg)(https://rich.readthedocs.io)
+[License](https://img.shields.io/badge/License-Educational-purple.svg)(https://github.com)
 
 **A comprehensive text-based monster collection game built through collaborative pair programming**
 
@@ -27,7 +27,7 @@
 **Nasra Mauli (Naasiro)**  
 *"The Foundation Architect"*
 
-[[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-black?logo=github)](https://github.com/Nasra-Maulid)
+[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-black?logo=github)(https://github.com/Nasra-Maulid)
 
 **Repositories**: 114+ | **Focus**: Web Development & System Architecture
 
@@ -44,7 +44,7 @@
 **Denis Maiyo**  
 *"The Experience Creator"*
 
-[[GitHub](https://img.shields.io/badge/GitHub-MaiyoDenis-black?logo=github)](https://github.com/MaiyoDenis)
+[GitHub](https://img.shields.io/badge/GitHub-MaiyoDenis-black?logo=github)(https://github.com/MaiyoDenis)
 
 **Repositories**: 61+ | **Focus**: AI & Full-Stack Development
 
@@ -527,7 +527,7 @@ def _display_battle_results(self, battle_result: dict):
 ### **🔧 Partner A: Nasra Mauli**
 **Core Game Engine & Monster System**
 
-[[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-181717?logo=github)](https://github.com/Nasra-Maulid)
+[GitHub](https://img.shields.io/badge/GitHub-Nasra--Maulid-181717?logo=github)(https://github.com/Nasra-Maulid)
 
 *Specialization: Database Architecture, Game Balance, System Design*
 
@@ -536,7 +536,7 @@ def _display_battle_results(self, battle_result: dict):
 ### **⚔️ Partner B: Denis Maiyo**  
 **Battle System & Player Management**
 
-[[GitHub](https://img.shields.io/badge/GitHub-MaiyoDenis-181717?logo=github)](https://github.com/MaiyoDenis)
+[GitHub](https://img.shields.io/badge/GitHub-MaiyoDenis-181717?logo=github)(https://github.com/MaiyoDenis)
 
 *Specialization: AI Development, Full-Stack Engineering, User Experience*
 
@@ -565,9 +565,9 @@ python3 monster_game.py start
 
 *Built with ❤️ through exceptional pair programming collaboration*
 
-[[Python](https://img.shields.io/badge/Made%20with-Python-blue.svg?logo=python)](https://python.org)
-[[SQLAlchemy](https://img.shields.io/badge/Powered%20by-SQLAlchemy-green.svg?logo=sqlalchemy)](https://sqlalchemy.org)
-[[Rich](https://img.shields.io/badge/Enhanced%20with-Rich-yellow.svg?logo=rich)](https://rich.readthedocs.io)
+[Python](https://img.shields.io/badge/Made%20with-Python-blue.svg?logo=python)(https://python.org)
+[SQLAlchemy](https://img.shields.io/badge/Powered%20by-SQLAlchemy-green.svg?logo=sqlalchemy)(https://sqlalchemy.org)
+[Rich](https://img.shields.io/badge/Enhanced%20with-Rich-yellow.svg?logo=rich)(https://rich.readthedocs.io)
 
 **Happy Monster Collecting!** 🎮✨
 
